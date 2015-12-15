@@ -28,12 +28,13 @@ db_path = uigetdir();
 BSZ = 4;
 QP = 22;
 N_AC_PATTERNS = 35;
-NB_FACES = 5;
-NB_IMAGES = 5;
+NB_FACES = 1;
+NB_IMAGES = 1;
 DC_MEAN_ALL = 0;
 
 %% Extraire les N blocs DCT pour chaque image de chaque visage
 AC_list = cell(NB_FACES,NB_IMAGES);% les matrices Nx15
+AC_list_after = cell(NB_FACES,NB_IMAGES);%apres calcul
 dc_means = zeros(NB_FACES,NB_IMAGES);% les moyennes par image des DC
 % des constantes
 blocSz =  (1:BSZ) - 1;
@@ -42,11 +43,9 @@ ACSZ = BSZ * BSZ - 1;
 % pour chaque visage
 for f = 1:NB_FACES
     face_path = sprintf('%s/base_connaissance/s%d',db_path,f);
-    face_path
     % pour chaque image
     for fi = 1:NB_IMAGES
-        fname = sprintf('%s/%d.png',face_path,fi)
-        fname
+        fname = sprintf('%s/%d.png',face_path,fi);
         img = imread(fname);
         [h,w] = size(img);
         n_blocks = 0;
@@ -86,32 +85,81 @@ G_Patterns = [];
 for f = 1:NB_FACES
     for fi = 1:NB_IMAGES
         % normalisation et quantification des AC
-%% CUT HERE ====================================================================
-%% CUT HERE ====================================================================
+        aux = AC_list{f,fi};
+        [h,w] = size(aux);
+        list = cell(w); 
+        for i = 1:w
+            a = aux{i}*DC_MEAN_ALL;
+            b=a/dc_means(f,fi)/QP;
+            aux_AC = round(b);
+            list{i} = aux_AC;
+        end
+        
+        
+        size(list,1)
+        AC_list_after{f,fi} = zeros(size(list,1),ACSZ);
+        for i = 1:size(list,1)
+            
+        end
+        
+        
+        
         
         % identification des motifs et comptage de leurs occurrences.
 				% QAC est la matrice des vecteurs AC quantifés
-        for i = 1:size(QAC,1)
-%% CUT HERE ====================================================================
-%% CUT HERE ====================================================================
+        if(size(G_Patterns,1) == 0)
+            G_Patterns(1,1:ACSZ) = list{1}(1:ACSZ);
+            G_Patterns(1,ACSZ+1) = 1;
+        else
+            findtab = ismember(G_Patterns(:,1:ACSZ), list{i}(1:ACSZ)','rows');
+            somme = sum(findtab);
+            index = find(findtab,1);
+            G_Patterns(size(G_Patterns,1),1:ACSZ) = list{i}(1:ACSZ);
+            if somme > 0
+                G_Patterns(index,ACSZ+1) = G_Patterns(index,ACSZ+1)+1;
+            else
+                G_Patterns(size(G_Patterns,1)+1,1:ACSZ) = list{i}(1:ACSZ);
+                G_Patterns(size(G_Patterns,1)+1,ACSZ+1) = 1;
+            end
+        end
+        for i = 2:size(list,1)
+            findtab = ismember(G_Patterns(:,1:ACSZ), list{i}(1:ACSZ)','rows');
+            somme = sum(findtab);
+            index = find(findtab,1);
+            G_Patterns(size(G_Patterns,1),1:ACSZ) = list{i}(1:ACSZ);
+            if somme > 0
+                G_Patterns(index,ACSZ+1) = G_Patterns(index,ACSZ+1)+1;
+            else
+                G_Patterns(size(G_Patterns,1)+1,1:ACSZ) = list{i}(1:ACSZ);
+                G_Patterns(size(G_Patterns,1)+1,ACSZ+1) = 1;
+            end
         end
     end
 end
+AC_list_after{1,1}{50}
 % Conserver les N_AC_PATTERNS motifs les plus présents dans toutes les
 % images de tous les visages de la base.
 [~,Idx] = sort(G_Patterns(:,end),'descend');
 G_Patterns = G_Patterns(Idx(1:N_AC_PATTERNS),1:(end-1));
+
 
 % save G_Patterns
 save('G_Patterns.mat','G_Patterns')
 disp('G_Patterns done')
 
 %% Construction des histogrammes de toutes les images de chaque visage
-AC_Patterns_Histo = zeros(N_AC_PATTERNS,1);
+AC_Patterns_Histo_List = cell(NB_FACES,NB_IMAGES);
+
 for f = 1:NB_FACES
     for fi = 1:NB_IMAGES
-%% CUT HERE ====================================================================
-%% CUT HERE ====================================================================
+        AC_Patterns_Histo = zeros(N_AC_PATTERNS,1);
+        for i = 1:N_AC_PATTERNS
+            AC_Patterns_Histo(i) = ismember(AC_list_after{f,fi}{:}, G_Patterns(i,1:ACSZ),'rows');
+            %AC_Patterns_Histo(i)
+        end
+        AC_Patterns_Histo_List{f,fi} = AC_Patterns_Histo;
     end
 end
-disp('AC_Patterns_Histo done');
+%save AC_Patterns_Histo_List
+save('AC_Patterns_Histo_List.mat','AC_Patterns_Histo_List')
+disp('AC_Patterns_Histo_List done');
