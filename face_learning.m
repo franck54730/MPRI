@@ -41,11 +41,12 @@ BZ2 = floor(BSZ/2);
 ACSZ = BSZ * BSZ - 1;
 % pour chaque visage
 for f = 1:NB_FACES
-    face_path = sprintf('%s/s%d',db_path,f);
-    
+    face_path = sprintf('%s/base_connaissance/s%d',db_path,f);
+    face_path
     % pour chaque image
     for fi = 1:NB_IMAGES
-        fname = sprintf('%s/%d.png',face_path,fi);
+        fname = sprintf('%s/%d.png',face_path,fi)
+        fname
         img = imread(fname);
         [h,w] = size(img);
         n_blocks = 0;
