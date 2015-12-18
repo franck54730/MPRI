@@ -11,16 +11,32 @@ end
  
 %% lecture des paramètres globaux
 load('params.mat'); % params est une structure (cf. face_learning)
-%% CUT HERE ====================================================================
-%% CUT HERE ====================================================================
+BZS = params.BZS
+QP = params.QP
+N_AC_PATTERNS = params.N_AC_PATTERNS
+NB_FACES = params.NB_FACES
+NB_IMAGES = params.NB_IMAGES
+DC_MEAN_ALL = params.DC_MEAN_ALL
+DIR = params.DIR
+%load('G_Patterns.mat');
+%G_Patterns
 
 %% extraction des blocs DCT
-%% CUT HERE ====================================================================
-%% CUT HERE ====================================================================
+[h,w] = size(img);
+n_blocks = 0;
+width_blocks = floor((w-1)/2);
+height_blocks = floor((h-1)/2);
+A = zeros(height_blocks,width_blocks);
+for i=1:1:height_blocks
+    for j=1:1:height_blocks
+        n_blocks = n_blocks+1;
+        dct = dct2(img(i:(i+3),j:(j+3)));
+        A(i,j) = dct;
+    end
+end
 
 %% Normalisation et quantification
-%% CUT HERE ====================================================================
-%% CUT HERE ====================================================================
+
 
 %% Comptage des occurrences des motifs globaux
 load('G_Patterns.mat');
